@@ -16,15 +16,19 @@ class BulkUpdateFields {
   public static function updateFields($entities, $fields, &$context) {
     $message = 'Updating Fields...';
     $results = array();
+    $update = FALSE;
     foreach ($entities as $id => $entity) {
       foreach ($fields as $field_name => $field_value) {
         if ($entity->hasField($field_name)) {
           $field_value = array_filter(array_filter($field_value, "is_numeric", ARRAY_FILTER_USE_KEY));
           $entity->get($field_name)->setValue($field_value);
+          $update = TRUE;
         }
       }
-      $entity->setNewRevision();
-      $entity->save();
+      if ($update) {
+        $entity->setNewRevision();
+        $entity->save();
+      }
     }
     $context['message'] = $message;
     $context['results'] = $results;
