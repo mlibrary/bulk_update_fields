@@ -10,11 +10,11 @@ use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 /**
-* Translate entity.
+* Update Fields.
 *
 * @Action(
 *   id = "bulk_update_fields_action_base",
-*   label = @Translation("Translate node with Smartling"),
+*   label = "Bulk Update Fields to Another Value",
 *   type = "node",
 *   confirm_form_route_name = "bulk_update_fields.form"
 * )
