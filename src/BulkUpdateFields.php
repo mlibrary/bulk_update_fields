@@ -3,12 +3,12 @@
 namespace Drupal\bulk_update_fields;
 
 /**
- *
+ * BulkUpdateFields.
  */
 class BulkUpdateFields {
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function updateFields($entities, $fields, &$context) {
     $message = 'Updating Fields...';
@@ -32,9 +32,9 @@ class BulkUpdateFields {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
-  public function BulkUpdateFieldsFinishedCallback($success, $results, $operations) {
+  public function bulkUpdateFieldsFinishedCallback($success, $results, $operations) {
     // The 'success' parameter means no fatal PHP errors were detected. All
     // other error management should be handled using 'results'.
     if ($success) {

@@ -12,31 +12,41 @@ use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- *
+ * BulkUpdateFieldsForm.
  */
 class BulkUpdateFieldsForm extends FormBase implements FormInterface {
 
   /**
    * Set a var to make stepthrough form.
+   *
+   * @var step
    */
   protected $step = 1;
   /**
    * Keep track of user input.
+   *
+   * @var userInput
    */
   protected $userInput = [];
 
   /**
-   * @var \Drupal\user\PrivateTempStoreFactory
+   * Tempstorage.
+   *
+   * @var tempStoreFactory
    */
   protected $tempStoreFactory;
 
   /**
-   * @var \Drupal\Core\Session\SessionManagerInterface
+   * Session.
+   *
+   * @var sessionManager
    */
   private $sessionManager;
 
   /**
-   * @var \Drupal\Core\Session\AccountInterface
+   * User.
+   *
+   * @var currentUser
    */
   private $currentUser;
 
@@ -44,8 +54,11 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
    * Constructs a \Drupal\bulk_update_fields\Form\BulkUpdateFieldsForm.
    *
    * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   *   Temp storage.
    * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
+   *   Session.
    * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   User.
    */
   public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {
     $this->tempStoreFactory = $temp_store_factory;
@@ -72,17 +85,20 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
-  public function _updateFields() {
+  public function updateFields() {
     $entities = $this->userInput['entities'];
     $fields = $this->userInput['fields'];
     $batch = [
       'title' => t('Updating Fields...'),
       'operations' => [
-        ['\Drupal\bulk_update_fields\BulkUpdateFields::updateFields', [$entities, $fields]],
+        [
+          '\Drupal\bulk_update_fields\BulkUpdateFields::updateFields',
+          [$entities, $fields],
+        ],
       ],
-      'finished' => '\Drupal\bulk_update_fields\BulkUpdateFields::BulkUpdateFieldsFinishedCallback',
+      'finished' => '\Drupal\bulk_update_fields\BulkUpdateFields::bulkUpdateFieldsFinishedCallback',
     ];
     batch_set($batch);
     return 'All fields were updated successfully';
@@ -104,8 +120,8 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
         break;
 
       case 3:
-        if (method_exists($this, '_updateFields')) {
-          $return_verify = $this->_updateFields();
+        if (method_exists($this, 'updateFields')) {
+          $return_verify = $this->updateFields();
         }
         drupal_set_message($return_verify);
         \Drupal::service("router.builder")->rebuild();
@@ -122,6 +138,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
       $form = $this->form;
     }
     $form['#title'] = t('Bulk Update Fields');
+    $submit_label = 'Next';
 
     switch ($this->step) {
       case 1:
@@ -163,8 +180,11 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
                 drupal_set_message('Cannot update field ' . $field_name . '. Date field types are not yet updatable.', 'error');
                 continue;
               }
-              // TODO I cannot figure out how to get a form element for only a field. Maybe someone else can
-              // TODO Doing it this way does not allow for feild labels on textarea widgets.
+              // TODO
+              // I cannot figure out how to get a form element for only a field.
+              // Maybe someone else can.
+              // TODO Doing it this way does not allow for feild labels on
+              // textarea widgets.
               $form[$field_name] = $entity->get($field_name)->defaultValuesForm($temp_form_element, $temp_form_state);
             }
           }
@@ -173,20 +193,20 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
         break;
 
       case 3:
-        $form['#title'] .= ' - ' . t('Are you sure you want to alter ' . count($this->userInput['fields']) . ' fields on ' . count($this->userInput['entities']) . ' entities?');
-        $form['actions']['submit'] = [
-          '#type' => 'submit',
-          '#value' => $this->t('Alter Fields'),
-          '#button_type' => 'primary',
-        ];
-        return $form;
+        $form['#title'] .= ' - ' . t('Are you sure you want to alter @count_fields fields on @count_entities entities?',
+            [
+              '@count_fields' => count($this->userInput['fields']),
+              '@count_entities' => count($this->userInput['entities']),
+            ]
+        );
+        $submit_label = 'Update Fields';
 
-      break;
+        break;
     }
     drupal_set_message('This module is experiemental. PLEASE do not use on production databases without prior testing and a complete database dump.', 'warning');
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Next'),
+      '#value' => $submit_label,
       '#button_type' => 'primary',
     ];
     return $form;

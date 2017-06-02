@@ -23,14 +23,14 @@ class BulkUpdateFieldsActionBase extends ActionBase implements ContainerFactoryP
   /**
    * The plugin_id.
    *
-   * @var string
+   * @var pluginId
    */
   protected $pluginId;
 
   /**
    * The plugin implementation definition.
    *
-   * @var array
+   * @var pluginDefinition
    */
   protected $pluginDefinition;
 
@@ -44,24 +44,28 @@ class BulkUpdateFieldsActionBase extends ActionBase implements ContainerFactoryP
    * Plugin configuration is optional, so plugin implementations must provide
    * their own setters and getters.
    *
-   * @var array
+   * @var configuration
    */
   protected $configuration;
 
   /**
    * The tempstore factory.
    *
-   * @var \Drupal\user\PrivateTempStoreFactory
+   * @var tempStoreFactory
    */
   protected $tempStoreFactory;
 
   /**
-   * @var \Drupal\Core\Session\SessionManagerInterface
+   * Session.
+   *
+   * @var sessionManager
    */
   private $sessionManager;
 
   /**
-   * @var \Drupal\Core\Session\AccountInterface
+   * User.
+   *
+   * @var currentUser
    */
   private $currentUser;
 
@@ -76,6 +80,10 @@ class BulkUpdateFieldsActionBase extends ActionBase implements ContainerFactoryP
    *   The plugin implementation definition.
    * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
    *   The tempstore factory.
+   * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
+   *   The session.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   The session.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {
     $this->configuration = $configuration;
