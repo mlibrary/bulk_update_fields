@@ -1,32 +1,29 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\bulk_update_fields\Form\BulkUpdateFieldsForm.
- */
-
 namespace Drupal\bulk_update_fields\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Markup;
-use Drupal\bulk_update_fields\BulkUpdateFields;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\Core\Entity\EntityForm;
-use Drupal\Core\Entity\EntityInterface;
 
-
+/**
+ *
+ */
 class BulkUpdateFieldsForm extends FormBase implements FormInterface {
 
-  // set a var to make stepthrough form
+  /**
+   * Set a var to make stepthrough form.
+   */
   protected $step = 1;
-  // keep track of user input
-  protected $user_input = array();
+  /**
+   * Keep track of user input.
+   */
+  protected $userInput = [];
 
   /**
    * @var \Drupal\user\PrivateTempStoreFactory
@@ -74,16 +71,19 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
     return 'bulk_update_fields_form';
   }
 
+  /**
+   *
+   */
   public function _updateFields() {
-    $entities = $this->user_input['entities'];
-    $fields = $this->user_input['fields'];
-    $batch = array(
+    $entities = $this->userInput['entities'];
+    $fields = $this->userInput['fields'];
+    $batch = [
       'title' => t('Updating Fields...'),
-      'operations' => array(
-        array('\Drupal\bulk_update_fields\BulkUpdateFields::updateFields', array($entities, $fields)),
-      ),
+      'operations' => [
+        ['\Drupal\bulk_update_fields\BulkUpdateFields::updateFields', [$entities, $fields]],
+      ],
       'finished' => '\Drupal\bulk_update_fields\BulkUpdateFields::BulkUpdateFieldsFinishedCallback',
-    );
+    ];
     batch_set($batch);
     return 'All fields were updated successfully';
   }
@@ -94,13 +94,15 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     switch ($this->step) {
       case 1:
-        $this->user_input['fields'] = array_filter($form_state->getUserInput()['table']);
+        $this->userInput['fields'] = array_filter($form_state->getValues()['table']);
         $form_state->setRebuild();
         break;
+
       case 2:
-        $this->user_input['fields'] = array_merge($this->user_input['fields'], $form_state->getValues()['default_value_input']);
+        $this->userInput['fields'] = array_merge($this->userInput['fields'], $form_state->getValues()['default_value_input']);
         $form_state->setRebuild();
         break;
+
       case 3:
         if (method_exists($this, '_updateFields')) {
           $return_verify = $this->_updateFields();
@@ -115,18 +117,20 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    if (isset($this->form)) { $form = $this->form; }
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    if (isset($this->form)) {
+      $form = $this->form;
+    }
     $form['#title'] = t('Bulk Update Fields');
 
     switch ($this->step) {
       case 1:
         // Retrieve IDs from the temporary storage.
-        $this->user_input['entities'] = $this->tempStoreFactory
+        $this->userInput['entities'] = $this->tempStoreFactory
           ->get('bulk_update_fields_ids')
           ->get($this->currentUser->id());
         $options = [];
-        foreach ($this->user_input['entities'] as $id => $entity) {
+        foreach ($this->userInput['entities'] as $id => $entity) {
           $this->entity = $entity;
           $fields = $entity->getFieldDefinitions();
           foreach ($fields as $field) {
@@ -136,45 +140,48 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           }
         }
         $header = [
-         'field_name' => t('Field Name'),
+          'field_name' => t('Field Name'),
         ];
-        $form['#title'] .= ' - '.t('Select Fields to Alter');
+        $form['#title'] .= ' - ' . t('Select Fields to Alter');
         $form['table'] = [
           '#type' => 'tableselect',
           '#header' => $header,
           '#options' => $options,
           '#empty' => t('No fields found'),
         ];
-      break;
+        break;
+
       case 2:
-        foreach ($this->user_input['entities'] as $id => $entity) {
+        foreach ($this->userInput['entities'] as $id => $entity) {
           $this->entity = $entity;
-          foreach ($this->user_input['fields'] as $field_name) {
+          foreach ($this->userInput['fields'] as $field_name) {
             $temp_form_element = [];
             $temp_form_state = new FormState();
             if ($field = $entity->getFieldDefinition($field_name)) {
-              //TODO Dates fields are incorrect due to TODOs below
+              // TODO Dates fields are incorrect due to TODOs below.
               if ($field->getType() == 'datetime') {
-                drupal_set_message('Cannot update field '.$field_name.'. Date field types are not yet updatable.', 'error');
+                drupal_set_message('Cannot update field ' . $field_name . '. Date field types are not yet updatable.', 'error');
                 continue;
               }
-              //TODO I cannot figure out how to get a form element for only a field. Maybe someone else can
-              //TODO Doing it this way does not allow for feild labels on textarea widgets
+              // TODO I cannot figure out how to get a form element for only a field. Maybe someone else can
+              // TODO Doing it this way does not allow for feild labels on textarea widgets.
               $form[$field_name] = $entity->get($field_name)->defaultValuesForm($temp_form_element, $temp_form_state);
             }
           }
         }
-        $form['#title'] .= ' - '.t('Enter New Values in Appropriate Fields');
-      break;
+        $form['#title'] .= ' - ' . t('Enter New Values in Appropriate Fields');
+        break;
+
       case 3:
-        $form['#title'] .= ' - '.t('Are you sure you want to alter '.count($this->user_input['fields']).' fields on '.count($this->user_input['entities']).' entities?');
+        $form['#title'] .= ' - ' . t('Are you sure you want to alter ' . count($this->userInput['fields']) . ' fields on ' . count($this->userInput['entities']) . ' entities?');
         $form['actions']['submit'] = [
           '#type' => 'submit',
           '#value' => $this->t('Alter Fields'),
           '#button_type' => 'primary',
         ];
         return $form;
-        break;
+
+      break;
     }
     drupal_set_message('This module is experiemental. PLEASE do not use on production databases without prior testing and a complete database dump.', 'warning');
     $form['actions']['submit'] = [
@@ -189,7 +196,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    //TODO
+    // TODO.
   }
 
 }

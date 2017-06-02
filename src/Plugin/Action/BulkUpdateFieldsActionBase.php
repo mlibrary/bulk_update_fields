@@ -1,24 +1,24 @@
 <?php
+
 namespace Drupal\bulk_update_fields\Plugin\Action;
+
 use Drupal\Core\Action\ActionBase;
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Action\ConfigurableActionBase;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\user\PrivateTempStoreFactory;
+
 /**
-* Update Fields.
-*
-* @Action(
-*   id = "bulk_update_fields_action_base",
-*   label = "Bulk Update Fields to Another Value",
-*   type = "node",
-*   confirm_form_route_name = "bulk_update_fields.form"
-* )
-*/
+ * Update Fields.
+ *
+ * @Action(
+ *   id = "bulk_update_fields_action_base",
+ *   label = "Bulk Update Fields to Another Value",
+ *   type = "node",
+ *   confirm_form_route_name = "bulk_update_fields.form"
+ * )
+ */
 class BulkUpdateFieldsActionBase extends ActionBase implements ContainerFactoryPluginInterface {
   /**
    * The plugin_id.
@@ -110,17 +110,18 @@ class BulkUpdateFieldsActionBase extends ActionBase implements ContainerFactoryP
   }
 
   /**
-  * {@inheritdoc}
-  */
+   * {@inheritdoc}
+   */
   public function execute(ContentEntityInterface $entity = NULL) {
     $this->executeMultiple([$entity]);
   }
 
   /**
-  * {@inheritdoc}
-  */
+   * {@inheritdoc}
+   */
   public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
     $access = AccessResult::allowed();
     return $return_as_object ? $access : $access->isAllowed();
   }
+
 }

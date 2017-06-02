@@ -1,21 +1,18 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\bulk_update_fields\BulkUpdateFields.
- */
-
 namespace Drupal\bulk_update_fields;
 
-use Drupal\Core\Field\WidgetBase;
-use Drupal\Core\Render\Markup;
-use Drupal\Core\Database\Database;
-
+/**
+ *
+ */
 class BulkUpdateFields {
 
+  /**
+   *
+   */
   public static function updateFields($entities, $fields, &$context) {
     $message = 'Updating Fields...';
-    $results = array();
+    $results = [];
     $update = FALSE;
     foreach ($entities as $id => $entity) {
       foreach ($fields as $field_name => $field_value) {
@@ -34,7 +31,10 @@ class BulkUpdateFields {
     $context['results'] = $results;
   }
 
-  function BulkUpdateFieldsFinishedCallback($success, $results, $operations) {
+  /**
+   *
+   */
+  public function BulkUpdateFieldsFinishedCallback($success, $results, $operations) {
     // The 'success' parameter means no fatal PHP errors were detected. All
     // other error management should be handled using 'results'.
     if ($success) {
@@ -48,4 +48,5 @@ class BulkUpdateFields {
     }
     drupal_set_message($message);
   }
+
 }
