@@ -129,8 +129,7 @@ class BulkUpdateFieldsActionBase extends ActionBase implements ContainerFactoryP
    * {@inheritdoc}
    */
   public function access($object, AccountInterface $account = NULL, $return_as_object = FALSE) {
-    $access = AccessResult::allowed();
-    return $return_as_object ? $access : $access->isAllowed();
+    return $object->access('update', $account, $return_as_object);
   }
 
 }
