@@ -14,7 +14,7 @@ class BulkUpdateFields {
     $message = 'Updating Fields...';
     $results = [];
     $update = FALSE;
-    foreach ($entities as $id => $entity) {
+    foreach ($entities as $entity) {
       foreach ($fields as $field_name => $field_value) {
         if ($entity->hasField($field_name)) {
           $field_value = array_filter(array_filter($field_value, "is_numeric", ARRAY_FILTER_USE_KEY));

@@ -10,6 +10,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Routing\RouteBuilderInterface;
 
 /**
  * BulkUpdateFieldsForm.
@@ -51,6 +52,13 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
   private $currentUser;
 
   /**
+   * The route builder.
+   *
+   * @var \Drupal\Core\Routing\RouteBuilderInterface
+   */
+  protected $routeBuilder;
+
+  /**
    * Constructs a \Drupal\bulk_update_fields\Form\BulkUpdateFieldsForm.
    *
    * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
@@ -59,11 +67,14 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
    *   Session.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   User.
+   * @param \Drupal\Core\Routing\RouteBuilderInterface $route_builder
+   *   Route.
    */
-  public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user) {
+  public function __construct(PrivateTempStoreFactory $temp_store_factory, SessionManagerInterface $session_manager, AccountInterface $current_user, RouteBuilderInterface $route_builder) {
     $this->tempStoreFactory = $temp_store_factory;
     $this->sessionManager = $session_manager;
     $this->currentUser = $current_user;
+    $this->routeBuilder = $route_builder;
   }
 
   /**
@@ -73,7 +84,8 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
     return new static(
       $container->get('user.private_tempstore'),
       $container->get('session_manager'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('router.builder')
     );
   }
 
@@ -91,7 +103,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
     $entities = $this->userInput['entities'];
     $fields = $this->userInput['fields'];
     $batch = [
-      'title' => t('Updating Fields...'),
+      'title' => $this->t('Updating Fields...'),
       'operations' => [
         [
           '\Drupal\bulk_update_fields\BulkUpdateFields::updateFields',
@@ -124,7 +136,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           $return_verify = $this->updateFields();
         }
         drupal_set_message($return_verify);
-        \Drupal::service("router.builder")->rebuild();
+        $this->routeBuilder->rebuild();
         break;
     }
     $this->step++;
@@ -137,7 +149,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
     if (isset($this->form)) {
       $form = $this->form;
     }
-    $form['#title'] = t('Bulk Update Fields');
+    $form['#title'] = $this->t('Bulk Update Fields');
     $submit_label = 'Next';
 
     switch ($this->step) {
@@ -147,7 +159,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           ->get('bulk_update_fields_ids')
           ->get($this->currentUser->id());
         $options = [];
-        foreach ($this->userInput['entities'] as $id => $entity) {
+        foreach ($this->userInput['entities'] as $entity) {
           $this->entity = $entity;
           $fields = $entity->getFieldDefinitions();
           foreach ($fields as $field) {
@@ -157,19 +169,19 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           }
         }
         $header = [
-          'field_name' => t('Field Name'),
+          'field_name' => $this->t('Field Name'),
         ];
-        $form['#title'] .= ' - ' . t('Select Fields to Alter');
+        $form['#title'] .= ' - ' . $this->t('Select Fields to Alter');
         $form['table'] = [
           '#type' => 'tableselect',
           '#header' => $header,
           '#options' => $options,
-          '#empty' => t('No fields found'),
+          '#empty' => $this->t('No fields found'),
         ];
         break;
 
       case 2:
-        foreach ($this->userInput['entities'] as $id => $entity) {
+        foreach ($this->userInput['entities'] as $entity) {
           $this->entity = $entity;
           foreach ($this->userInput['fields'] as $field_name) {
             $temp_form_element = [];
@@ -177,7 +189,10 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
             if ($field = $entity->getFieldDefinition($field_name)) {
               // TODO Dates fields are incorrect due to TODOs below.
               if ($field->getType() == 'datetime') {
-                drupal_set_message('Cannot update field ' . $field_name . '. Date field types are not yet updatable.', 'error');
+                drupal_set_message($this->t('Cannot update field @field_name. Date field types are not yet updatable.',
+                  [
+                    '@field_name' => $field_name,
+                  ]), 'error');
                 continue;
               }
               // TODO
@@ -189,11 +204,11 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
             }
           }
         }
-        $form['#title'] .= ' - ' . t('Enter New Values in Appropriate Fields');
+        $form['#title'] .= ' - ' . $this->t('Enter New Values in Appropriate Fields');
         break;
 
       case 3:
-        $form['#title'] .= ' - ' . t('Are you sure you want to alter @count_fields fields on @count_entities entities?',
+        $form['#title'] .= ' - ' . $this->t('Are you sure you want to alter @count_fields fields on @count_entities entities?',
             [
               '@count_fields' => count($this->userInput['fields']),
               '@count_entities' => count($this->userInput['entities']),
@@ -203,7 +218,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
 
         break;
     }
-    drupal_set_message('This module is experiemental. PLEASE do not use on production databases without prior testing and a complete database dump.', 'warning');
+    drupal_set_message($this->t('This module is experiemental. PLEASE do not use on production databases without prior testing and a complete database dump.'), 'warning');
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $submit_label,
