@@ -19,8 +19,13 @@ class BulkUpdateFields {
       foreach ($fields as $field_name => $field_value) {
         if ($entity->hasField($field_name)) {
           if ($field_value == $field_name ) { continue; } // this is the case for field images for some reason
+          // not sure if this is still valid but leaving in case
           if (isset($field_value['target_id'][0])) {
             $field_value = $field_value['target_id'];
+          }
+          // this caused a failure in core/entity/plugin/datatype/entityreference. removing.
+          if (isset($field_value[0]['target_id']) && isset($field_value['add_more'])) {
+            unset($field_value['add_more']);
           }
           $entity->get($field_name)->setValue($field_value);
           $update = TRUE;
