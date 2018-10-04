@@ -27,6 +27,10 @@ class BulkUpdateFields {
           if (isset($field_value[0]['target_id']) && isset($field_value['add_more'])) {
             unset($field_value['add_more']);
           }
+          // this occurs in fields like office hours.
+          if (isset($field_value['value'])) {
+            $field_value = $field_value['value'];
+          }
           $entity->get($field_name)->setValue($field_value);
           $update = TRUE;
           if (!in_array($field_name, $results_fields)) {
