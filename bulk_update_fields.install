@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Install, update and uninstall functions for the profilename install profile.
+ * Contains install and update functions for Bulk Update Fields.
  */
 
  /**
@@ -15,4 +15,13 @@ function bulk_update_fields_update_8001(&$sandbox) {
     ->set('id', 'bulk_update_fields_action_base')
     ->save();
   $actions_storage->resetCache();
+}
+
+/**
+ * Implements hook_install().
+ */
+function bulk_update_fields_install() {
+  foreach (\Drupal::entityTypeManager()->getDefinitions() as $entity_type_machine_name => $entity_type) {
+    _bulk_update_fields_create_action($entity_type_machine_name, $entity_type->getLabel());
+  }
 }

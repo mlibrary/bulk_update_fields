@@ -11,6 +11,8 @@ use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\user\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\RouteBuilderInterface;
+use Drupal\default_paragraphs\Plugin\Field\FieldWidget\DefaultParagraphsWidget;
+use Drupal\paragraphs\Plugin\Field\FieldWidget\ParagraphsWidget;
 
 /**
  * BulkUpdateFieldsForm.
@@ -111,6 +113,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
         ],
       ],
       'finished' => '\Drupal\bulk_update_fields\BulkUpdateFields::bulkUpdateFieldsFinishedCallback',
+      'file' => '\Drupal\bulk_update_fields\BulkUpdateFields',
     ];
     batch_set($batch);
     return 'All fields were updated successfully';
@@ -127,7 +130,23 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
         break;
 
       case 2:
-        $this->userInput['fields'] = array_merge($this->userInput['fields'], $form_state->getValues()['default_value_input']);
+        $form_state_values = $form_state->getValues();
+        foreach ($form_state_values as $field_name => $form_state_value) {
+          // Paragraphs dont allow defaults.
+          // Force it with just values.
+          if ($field_name != 'default_value_input' && is_array($form_state_value)) {
+            $form_state_values['default_value_input'][$field_name] = $form_state_value;
+            foreach ($form_state_value as $key => $value) {
+              if (!is_numeric($key)) {
+                unset($form_state_values['default_value_input'][$field_name][$key]);
+              }
+              elseif (isset($form['default_value_input'][$field_name]['widget'][$key]['#paragraph_type'])) {
+                $form_state_values['default_value_input'][$field_name][$key]['paragraph_type'] = $form['default_value_input'][$field_name]['widget'][$key]['#paragraph_type'];
+              }
+            }
+          }
+        }
+        $this->userInput['fields'] = array_merge($this->userInput['fields'], $form_state_values['default_value_input']);
         $form_state->setRebuild();
         break;
 
@@ -176,7 +195,11 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           'revision_timestamp',
           'revision_log',
           'created',
-          'changed'
+          'changed',
+          'pass',
+          'name',
+          'mail',
+          'init'
         ];
         foreach ($this->userInput['entities'] as $entity) {
           $this->entity = $entity;
@@ -208,18 +231,33 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
             if ($field = $entity->getFieldDefinition($field_name)) {
               // TODO Dates fields are incorrect due to TODOs below.
               if ($field->getType() == 'datetime') {
-                drupal_set_message($this->t('Cannot update field @field_name. Date field types are not yet updatable.',
-                  [
-                    '@field_name' => $field_name,
-                  ]), 'error');
-                continue;
+                $type = \Drupal::service('plugin.manager.field.widget');
+                $plugin_definition = $type->getDefinition('datetime_default');
+                $widget = new \Drupal\datetime\Plugin\Field\FieldWidget\DateTimeWidgetBase('datetime', $plugin_definition, $entity->get($field_name)->getFieldDefinition(), [], []);
+                $form['#parents'] = [];
+                $form['default_value_input'][$field_name] = $widget->form($entity->get($field_name), $form, $form_state);
               }
-              // TODO
-              // I cannot figure out how to get a form element for only a field.
-              // Maybe someone else can.
-              // TODO Doing it this way does not allow for feild labels on
-              // textarea widgets.
-              $form[$field_name] = $entity->get($field_name)->defaultValuesForm($temp_form_element, $temp_form_state);
+              elseif ($field->getType() == 'entity_reference_revisions') {
+                // TODO - allow other types of entity_reference_revisions
+                // currently paragraphs only.
+                $type = \Drupal::service('plugin.manager.field.widget');
+                $plugin_definition = $type->getDefinition('paragraphs');
+                $widget = new ParagraphsWidget('paragraphs', $plugin_definition, $entity->get($field_name)->getFieldDefinition(), [], []);
+                $form['#parents'] = [];
+                $form['default_value_input'][$field_name] = $widget->form($entity->get($field_name), $form, $form_state);
+                if ($form_state->getTriggeringElement()['#name'] != 'op') {
+                  $paragraph_type = $form_state->getTriggeringElement()['#bundle_machine_name'];
+                  $form_state->set('paragraph_type', $paragraph_type);
+                }
+              }
+              else {
+                // TODO
+                // I cannot figure out how to get a form element for only a field.
+                // Maybe someone else can.
+                // TODO Doing it this way does not allow for feild labels on
+                // textarea widgets.
+                $form[$field_name] = $entity->get($field_name)->defaultValuesForm($temp_form_element, $temp_form_state);
+              }
             }
           }
         }
@@ -237,7 +275,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
 
         break;
     }
-    drupal_set_message($this->t('This module is experiemental. PLEASE do not use on production databases without prior testing and a complete database dump.'), 'warning');
+    drupal_set_message($this->t('This module is experiemental. PLEASE do not use on production databases without prior testing and a complete database dump. Some field widgets do not work, Entity Browser for instance. Change your widgets to core widgets in entity form displays where possible.'), 'warning');
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $submit_label,
