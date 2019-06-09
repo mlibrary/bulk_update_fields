@@ -104,14 +104,13 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
   public function updateFields() {
     $entities = $this->userInput['entities'];
     $fields = $this->userInput['fields'];
+    $operations = [];
+    foreach ($entities as $entity) {
+      $operations[] = ['\Drupal\bulk_update_fields\BulkUpdateFields::updateFields', [$entity, $fields]];
+    }
     $batch = [
       'title' => $this->t('Updating Fields...'),
-      'operations' => [
-        [
-          '\Drupal\bulk_update_fields\BulkUpdateFields::updateFields',
-          [$entities, $fields],
-        ],
-      ],
+      'operations' => $operations,
       'finished' => '\Drupal\bulk_update_fields\BulkUpdateFields::bulkUpdateFieldsFinishedCallback',
       'file' => '\Drupal\bulk_update_fields\BulkUpdateFields',
     ];
