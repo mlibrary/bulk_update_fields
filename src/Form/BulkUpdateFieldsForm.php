@@ -205,7 +205,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           $fields = $entity->getFieldDefinitions();
           foreach ($fields as $field) {
             if (!in_array($field->getName(), $excluded_base_fields) && !isset($options[$field->getName()])) {
-              $options[$field->getName()]['field_name'] = $field->getName();
+              $options[$field->getName()]['field_name'] = ($field->getLabel()) ? $field->getLabel() : $field->getName();
             }
           }
         }
