@@ -284,7 +284,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
 
         break;
     }
-    drupal_set_message($this->t('This module is experiemental. PLEASE do not use on production databases without prior testing and a complete database dump. Some field widgets do not work, Entity Browser for instance. Change your widgets to core widgets in entity form displays where possible.'), 'warning');
+
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $submit_label,
