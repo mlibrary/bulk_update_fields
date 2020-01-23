@@ -227,6 +227,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           foreach ($this->userInput['fields'] as $field_name) {
             $temp_form_element = [];
             $temp_form_state = new FormState();
+            $temp_form_state->setFormObject($form_state->getFormObject());
             if ($field = $entity->getFieldDefinition($field_name)) {
               // TODO Dates fields are incorrect due to TODOs below.
               if ($field->getType() == 'datetime') {
