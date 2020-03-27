@@ -202,7 +202,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           'mail',
           'init'
         ];
-
+        $excluded_fields = $this->config('bulk_update_fields.settings')->get('exclude');
         // Make it possible to bulk update 'Generate automatic URL alias'.
         // @todo: add code to remove 'URL alias'.
         if (\Drupal::moduleHandler()->moduleExists('pathauto')) {
@@ -216,7 +216,9 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           $fields = $entity->getFieldDefinitions();
           foreach ($fields as $field) {
             if (!in_array($field->getName(), $excluded_base_fields) && !isset($options[$field->getName()])) {
-              $options[$field->getName()]['field_name'] = ($field->getLabel()) ? $field->getLabel() : $field->getName();
+              if (!in_array($field->getName(), array_filter($excluded_fields))) {
+                $options[$field->getName()]['field_name'] = ($field->getLabel()) ? $field->getLabel() : $field->getName();
+              }
             }
           }
         }
