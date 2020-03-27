@@ -145,7 +145,9 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
             }
           }
         }
-        $this->userInput['fields'] = array_merge($this->userInput['fields'], $form_state_values['default_value_input']);
+        if (isset($this->userInput['fields']) && isset($form_state_values['default_value_input'])) {
+          $this->userInput['fields'] = array_merge($this->userInput['fields'], $form_state_values['default_value_input']);
+        }
         $form_state->setRebuild();
         break;
 
