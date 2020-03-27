@@ -8,7 +8,7 @@ use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
-use Drupal\user\PrivateTempStoreFactory;
+use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\RouteBuilderInterface;
 use Drupal\default_paragraphs\Plugin\Field\FieldWidget\DefaultParagraphsWidget;
@@ -63,7 +63,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
   /**
    * Constructs a \Drupal\bulk_update_fields\Form\BulkUpdateFieldsForm.
    *
-   * @param \Drupal\user\PrivateTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\PrivateTempStoreFactory $temp_store_factory
    *   Temp storage.
    * @param \Drupal\Core\Session\SessionManagerInterface $session_manager
    *   Session.
@@ -84,7 +84,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('user.private_tempstore'),
+      $container->get('tempstore.private'),
       $container->get('session_manager'),
       $container->get('current_user'),
       $container->get('router.builder')
@@ -153,7 +153,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
         if (method_exists($this, 'updateFields')) {
           $return_verify = $this->updateFields();
         }
-        drupal_set_message($return_verify);
+        $this->messenger()->addStatus($return_verify);
         $this->routeBuilder->rebuild();
         break;
     }
