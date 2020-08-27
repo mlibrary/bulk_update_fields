@@ -2,6 +2,7 @@
 
 namespace Drupal\bulk_update_fields\Form;
 
+use Drupal\datetime\Plugin\Field\FieldWidget\DateTimeWidgetBase;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormInterface;
@@ -246,7 +247,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
               if ($field->getType() == 'datetime') {
                 $type = \Drupal::service('plugin.manager.field.widget');
                 $plugin_definition = $type->getDefinition('datetime_default');
-                $widget = new \Drupal\datetime\Plugin\Field\FieldWidget\DateTimeWidgetBase('datetime', $plugin_definition, $entity->get($field_name)->getFieldDefinition(), [], []);
+                $widget = new DateTimeWidgetBase('datetime', $plugin_definition, $entity->get($field_name)->getFieldDefinition(), [], []);
                 $form['#parents'] = [];
                 $form['default_value_input'][$field_name] = $widget->form($entity->get($field_name), $form, $form_state);
               }
