@@ -5,52 +5,50 @@ namespace Drupal\bulk_update_fields\Form;
 use Drupal\datetime\Plugin\Field\FieldWidget\DateTimeWidgetBase;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
-use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionManagerInterface;
 use Drupal\Core\TempStore\PrivateTempStoreFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Routing\RouteBuilderInterface;
-use Drupal\default_paragraphs\Plugin\Field\FieldWidget\DefaultParagraphsWidget;
 use Drupal\paragraphs\Plugin\Field\FieldWidget\ParagraphsWidget;
 
 /**
  * BulkUpdateFieldsForm.
  */
-class BulkUpdateFieldsForm extends FormBase implements FormInterface {
+class BulkUpdateFieldsForm extends FormBase {
 
   /**
    * Set a var to make stepthrough form.
    *
-   * @var step
+   * @var int
    */
   protected $step = 1;
   /**
    * Keep track of user input.
    *
-   * @var userInput
+   * @var array
    */
   protected $userInput = [];
 
   /**
    * Tempstorage.
    *
-   * @var tempStoreFactory
+   * @var \Drupal\Core\TempStore\PrivateTempStoreFactory
    */
   protected $tempStoreFactory;
 
   /**
    * Session.
    *
-   * @var sessionManager
+   * @var \Drupal\Core\Session\SessionManagerInterface
    */
   private $sessionManager;
 
   /**
    * User.
    *
-   * @var currentUser
+   * @var \Drupal\Core\Session\AccountInterface
    */
   private $currentUser;
 
@@ -107,7 +105,10 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
     $fields = $this->userInput['fields'];
     $operations = [];
     foreach ($entities as $entity) {
-      $operations[] = ['\Drupal\bulk_update_fields\BulkUpdateFields::updateFields', [$entity, $fields]];
+      $operations[] = [
+        '\Drupal\bulk_update_fields\BulkUpdateFields::updateFields',
+        [$entity, $fields],
+      ];
     }
     $batch = [
       'title' => $this->t('Updating Fields...'),
@@ -201,7 +202,7 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           'pass',
           'name',
           'mail',
-          'init'
+          'init',
         ];
         $excluded_fields = $this->config('bulk_update_fields.settings')->get('exclude');
         // Make it possible to bulk update 'Generate automatic URL alias'.
@@ -270,8 +271,8 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
               }
               else {
                 // TODO
-                // I cannot figure out how to get a form element for only a field.
-                // Maybe someone else can.
+                // I cannot figure out how to get a form element for only a
+                // field. Maybe someone else can.
                 // TODO Doing it this way does not allow for feild labels on
                 // textarea widgets.
                 $form[$field_name] = $entity->get($field_name)->defaultValuesForm($temp_form_element, $temp_form_state);
