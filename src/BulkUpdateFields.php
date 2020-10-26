@@ -32,7 +32,7 @@ class BulkUpdateFields {
    */
   public static function processField($value, $field_definition) {
     // See if datetime, daterange.
-    if (strpos($field_definition->getType(), 'date') !== FALSE) {
+    if (strpos($field_definition->getType(), 'date') !== FALSE && !empty($value['value'])) {
       $datetime_type = $field_definition->getFieldStorageDefinition()->getSettings()['datetime_type'];
       $value['value'] = self::processDate($value['value'], $datetime_type);
       if ($field_definition->getType() == 'daterange') {
