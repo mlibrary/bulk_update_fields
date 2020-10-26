@@ -212,7 +212,9 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
           }
         }
 
-        foreach ($this->userInput['entities'] as $entity) {
+        foreach ($this->userInput['entities'] as $index => $entity) {
+          $langcode = explode(':',$index)[1];
+          $entity = $entity->getTranslation($langcode);
           $this->entity = $entity;
           $fields = $entity->getFieldDefinitions();
           foreach ($fields as $field) {
@@ -236,7 +238,9 @@ class BulkUpdateFieldsForm extends FormBase implements FormInterface {
         break;
 
       case 2:
-        foreach ($this->userInput['entities'] as $entity) {
+        foreach ($this->userInput['entities'] as $index => $entity) {
+          $langcode = explode(':',$index)[1];
+          $entity = $entity->getTranslation($langcode);
           $this->entity = $entity;
           foreach ($this->userInput['fields'] as $field_name) {
             $temp_form_element = [];

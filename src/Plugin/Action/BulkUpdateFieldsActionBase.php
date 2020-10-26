@@ -111,7 +111,7 @@ class BulkUpdateFieldsActionBase extends ActionBase implements ContainerFactoryP
   public function executeMultiple(array $entities) {
     $ids = [];
     foreach ($entities as $entity) {
-      $ids[$entity->id()] = $entity;
+      $ids[$entity->id() .':' . $entity->language()->getId()] = $entity;
     }
     $this->tempStoreFactory->get('bulk_update_fields_ids')
       ->set($this->currentUser->id(), $ids);

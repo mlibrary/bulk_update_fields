@@ -68,6 +68,9 @@ class BulkUpdateFields {
    */
   public static function updateFields($entity, $fields, &$context) {
     $message = 'Updating Fields on ';
+    $langcode = $entity->language()->getId();
+    $entity = \Drupal::entityTypeManager()->getStorage($entity->getEntityTypeId())->load($entity->id());
+    $entity = $entity->getTranslation($langcode);
     $results_entities = [];
     $results_fields = [];
     $update = FALSE;
