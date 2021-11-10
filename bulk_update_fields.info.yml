@@ -6,3 +6,4 @@ core_version_requirement: ^8 || ^9
 configure: bulk_update_fields.bulk_update_exclude_form
 dependencies:
   - drupal:action
+  - drupal:node
